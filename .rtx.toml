@@ -1,2 +1,0 @@
-[tools]
-python = { version = "3.10", virtualenv = ".venv" }
