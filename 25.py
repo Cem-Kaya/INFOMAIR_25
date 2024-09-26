@@ -12,9 +12,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.decomposition import PCA
 import plotly.express as px
-
-import nbformat
-
+import pickle
 
 # %%
 # split input in dialog act and sentence
@@ -76,7 +74,6 @@ def base_line2(x):
 
 # %%
 # Evaluate the baseline models
-
 y_baseline1 = x_test.apply(base_line1)
 y_baseline2 = x_test.apply(base_line2)
 
@@ -88,7 +85,6 @@ print(classification_report(y_test, y_baseline2))
 
 # %%
 # Dedupe the data for the machine learning models
-
 deduped_data = data.drop_duplicates(subset='sentence')
 
 # Split the deduped data into training and test data
@@ -98,8 +94,6 @@ x_train_dupe, x_test_dupe, y_train_dupe, y_test_dupe = train_test_split( data["s
 
 # %%
 # Use a simple bag of words model to vectorize the input data
-# TODO: also train the models on the non deduped data
-
 count_vectorizer = CountVectorizer()
 x_train_count = count_vectorizer.fit_transform(x_train_deduped)
 
@@ -144,6 +138,7 @@ y_pred = logistic_regression_model.predict(x_test_count)
 
 print("Logistic Regression, non deduped  data   " )
 print(classification_report(y_test_deduped, y_pred))
+pickle.dump(logistic_regression_model, open("classifiers/logistic_regression_deduped.pkl", "wb"))
 
 # %%
 # Train a random forest model on the data
@@ -158,9 +153,10 @@ y_pred = random_forest_model.predict(x_test_count)
 
 print("Random Forest, non deduped data   ")
 print(classification_report(y_test_deduped, y_pred))
+pickle.dump(random_forest_model, open("classifiers/random_forest_deduped.pkl", "wb"))
 
 # %%
-# train a knn model on teh data 
+# train a knn model on the data 
 
 knn_model = KNeighborsClassifier(n_neighbors=5, metric="manhattan"  , algorithm="kd_tree"  , n_jobs=None)
  
@@ -172,6 +168,7 @@ y_pred = knn_model.predict(x_test_count)
 
 print("KNN, non deduped data")
 print(classification_report(y_test_deduped, y_pred))
+pickle.dump(knn_model, open("classifiers/knn_deduped.pkl", "wb"))
 
 
 # %%
@@ -187,6 +184,7 @@ y_pred = logistic_regression_model.predict(x_test_count)
 
 print("Logistic Regression, deduped data")
 print(classification_report(y_test_dupe, y_pred))
+pickle.dump(logistic_regression_model, open("classifiers/logistic_regression_duped.pkl", "wb"))
 
 
 # %%
@@ -202,6 +200,7 @@ y_pred = random_forest_model.predict(x_test_count)
 
 print("Random Forest, deduped data")
 print(classification_report(y_test_dupe, y_pred))
+pickle.dump(random_forest_model, open("classifiers/random_forest_duped.pkl", "wb"))
 
 
 # %%
@@ -217,6 +216,7 @@ y_pred = knn_model.predict(x_test_count)
 
 
 print(classification_report(y_test_dupe, y_pred))
+pickle.dump(knn_model, open("classifiers/knn_duped.pkl", "wb"))
 
 
 # %%
