@@ -1,6 +1,25 @@
 import pandas as pd
 from enum import Enum
 from Levenshtein import distance
+import pickle
+from sklearn.feature_extraction.text import CountVectorizer
+
+
+DEBUG = True
+
+
+# Load the  logistic regression model BEST 
+with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
+    model = pickle.load(model_file)
+# Load the  random forest model BEST 
+#with open("classifiers/random_forest_deduped.pkl", "rb") as model_file:
+    #model = pickle.load(model_file)
+
+# Load the count vectorizer used during training to ensure the input format matches
+with open("classifiers/count_vectorizer.pkl", "rb") as vectorizer_file:
+    count_vectorizer = pickle.load(vectorizer_file)
+
+
 
 class DialogState(Enum):
     WELCOME = 1  # starting state 
@@ -66,17 +85,22 @@ def find_restaurants(preferences):
     sorted_restaurants = sorted(matched_restaurants, key=lambda x: x["matched"], reverse=True)
     return [x["restaurant"] for x in sorted_restaurants]
 
-def dialog_manager(current_state, user_input):
+def dialog_manager(current_state, user_input, model_prediction):
+    
+    if DEBUG:
+        print(f"---- current_state: {current_state}")
+    
     preferences = {"food_type": None, "pricerange": None, "area": None}
     if current_state == DialogState.WELCOME:
         print("Welcome! What type of restaurant are you looking for?")
         return DialogState.ASK_PREFERENCES
     
     elif current_state == DialogState.ASK_PREFERENCES:
-        (preferences, suggestions) = extract_preferences(user_input)
+        print("Please provide me with your preferences.")
+        (new_preferences, new_suggestions) = extract_preferences(user_input)
         # check was there any preferences
-        if suggestions["food"] or suggestions["pricerange"] or suggestions["area"]:
-            for key, value in suggestions.items():
+        if new_suggestions["food"] or new_suggestions["pricerange"] or new_suggestions["area"]:
+            for key, value in new_suggestions.items():
                 if value:
                     print(f"I'm sorry, I didn't understand. Did you mean {value} for {key}?")
                     user_input = input().lower()
@@ -85,7 +109,7 @@ def dialog_manager(current_state, user_input):
                     else:
                         preferences[key] = value
 
-        if not ( preferences["food"] or preferences["pricerange"] or preferences["area"] ):
+        if not ( new_preferences["food"] or new_preferences["pricerange"] or new_preferences["area"] ):
             print("I'm sorry, I didn't understand. Could you please provide a more clear answer?")
             return DialogState.ASK_CLEAR_PREFERENCES
         else:  
@@ -99,8 +123,24 @@ def dialog_manager(current_state, user_input):
         
     
     elif current_state == DialogState.ASK_CLEAR_PREFERENCES:
-        preferences = extract_preferences(user_input)
-        if preferences["food"] or preferences["pricerange"] or preferences["area"]:
+        tmp = extract_preferences(user_input)
+        new_preferences = tmp[0]
+        new_suggestions = tmp[1]
+        
+        if DEBUG:
+            print(f"---- preferences: {preferences}")
+            
+        if new_preferences["food"] or new_preferences["pricerange"] or new_preferences["area"]:
+            #update preferences
+            for key, value in new_preferences.items():
+                if value:
+                    preferences[key] = value
+            return DialogState.ASK_PREFERENCES
+        elif new_suggestions["food"] or new_suggestions["pricerange"] or new_suggestions["area"]:
+             #update preferences
+            for key, value in new_suggestions.items():
+                if value:
+                    preferences[key] = value
             return DialogState.ASK_PREFERENCES
         else:
             print("I still couldn't understand. Could you please try again?")
@@ -136,9 +176,18 @@ def dialog_manager(current_state, user_input):
 
 def main():
     current_state = DialogState.WELCOME
+    print("Welcome to project 25 restaurant recommender! how can I help you today?") 
     while current_state:
         user_input = input().lower()
-        current_state = dialog_manager(current_state, user_input)
-
+        model_input = count_vectorizer.transform([user_input])
+        prediction = model.predict(model_input)
+        if DEBUG:
+            print(f"---- Model prediction: {prediction}")
+        current_state = dialog_manager(current_state, user_input, prediction)
+        if DEBUG:
+            print(f"---- Output_state: {current_state}")
+            
+            
+            
 if __name__ == "__main__":
     main()

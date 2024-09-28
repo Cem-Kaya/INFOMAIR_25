@@ -97,6 +97,9 @@ x_train_dupe, x_test_dupe, y_train_dupe, y_test_dupe = train_test_split( data["s
 count_vectorizer = CountVectorizer()
 x_train_count = count_vectorizer.fit_transform(x_train_deduped)
 
+# Save 
+pickle.dump(count_vectorizer, open("classifiers/count_vectorizer.pkl", "wb"))
+
 # Create a visual representation of the data using PCA
 # this can be used to get a feeling for the data and to see if the data is separable
 
@@ -111,6 +114,9 @@ fig.show()
 # do the pca with the duped data
 count_vectorizer_dupe = CountVectorizer()
 x_train_count_dupe = count_vectorizer_dupe.fit_transform(x_train_dupe)
+
+pickle.dump(count_vectorizer_dupe, open("classifiers/count_vectorizer_duped.pkl", "wb"))
+
 
 pca = PCA(n_components=3)
 
