@@ -1,0 +1,110 @@
+restaurantname,pricerange,area,food,phone,addr,postcode,food_quality,crowdedness,length_of_stay
+saint johns chop house,moderate,west,british,01223 353110,21 - 24 northampton street,c.b 3,6,True,False
+restaurant alimentum,moderate,north,modern european,01223 413000,152 - 154 hills road,c.b 2,2,False,True
+pizza hut cherry hinton,moderate,south,italian,01223 323737,g4 cambridge leisure park clifton way cherry hinton,c.b 1,1,True,False
+the gardenia,moderate,west,romanian,01223 356354,2 rose crescent city centre,c.b 2,4,False,False
+loch fyne,moderate,centre,seafood,01223 362433,the little rose 37 trumpington street,c.b 2,9,True,False
+yu garden,expensive,east,chinese,01223 248882,529 newmarket road fen ditton,c.b 5,7,False,False
+sitar tandoori,expensive,east,steakhouse,01223 249955,43 high street cherry hinton cherry hinton,c.b 1,1,False,False
+saigon city,expensive,north,asian oriental,01223 356555,169 high street chesterton chesterton,c.b 4,1,False,False
+restaurant two two,expensive,north,french,01223 351880,22 chesterton road chesterton,c.b 4,9,True,True
+the hotpot,expensive,north,chinese,01223 366552,66 chesterton road chesterton,c.b 4,4,False,True
+nandos,cheap,south,portuguese,01223 327908,cambridge leisure park clifton way,c.b 1,9,False,True
+peking restaurant,expensive,south,chinese,01223 354755,10 homerton street city centre,c.b 2,8,True,True
+rajmahal,moderate,east,indian,01223 244955,7 barnwell road fen ditton,c.b 5,9,True,True
+pizza hut fen ditton,moderate,east,italian,01223 323737,cambridge retail park newmarket road fen ditton,c.b 5,3,False,True
+the missing sock,cheap,south,chinese,01223 812660,finders corner newmarket road,c.b 25,3,True,False
+royal standard,expensive,east,spanish,01223 247877,290 mill road city centre,c.b 1,6,True,True
+grafton hotel restaurant,expensive,east,british,01223 241387,grafton hotel 619 newmarket road fen ditton,c.b 5,7,False,False
+dojo noodle bar,expensive,centre,asian oriental,01223 363471,40210 millers yard city centre,c.b 2,9,False,False
+cambridge lodge restaurant,expensive,west,european,01223 355166,cambridge lodge hotel 139 huntingdon road city centre,c.b 3,4,False,True
+thanh binh,cheap,west,vietnamese,01223 362456,17 magdalene street city centre,c.b 3,7,True,True
+stazione restaurant and coffee bar,expensive,centre,korean,01223 352607,market hill city centre,,2,True,True
+cote,expensive,centre,french,01223 311053,bridge street city centre,c.b 2,9,False,True
+cotto,moderate,centre,british,01223 302010,183 east road city centre,c.b 1,3,False,False
+bangkok city,expensive,centre,thai,01223 354382,24 green street city centre,c.b 2,3,True,True
+frankie and bennys,expensive,south,italian,01223 412430,cambridge leisure park clifton way cherry hinton,c.b 1,5,True,False
+the cow pizza kitchen and bar,moderate,centre,moroccan,01223 308871,corn exchange street,c.b 2,1,False,False
+eraina,expensive,centre,european,01223 368786,free school lane city centre,c.b 2,9,False,True
+curry garden,expensive,centre,asian oriental,01223 302330,106 regent street city centre,,7,True,True
+mahal of cambridge,cheap,centre,indian,01223 360409,3 - 5 millers yard mill lane,,5,False,True
+golden wok,moderate,north,asian oriental,01223 350688,191 histon road chesterton,c.b 4,6,False,True
+meghna,moderate,north,indian,01223 727410,205 victoria road chesterton,c.b 4,1,False,False
+the nirala,moderate,north,indian,01223 360966,7 milton road chesterton,c.b 4,8,True,False
+michaelhouse cafe,expensive,centre,european,01223 309147,st. michael's church trinity street city centre,c.b 2,2,False,True
+efes restaurant,moderate,centre,swiss,01223 500005,king street city centre,c.b 1,2,False,False
+chiquito restaurant bar,expensive,south,european,01223 400170,2g cambridge leisure park cherry hinton road cherry hinton,c.b 1,2,False,True
+caffe uno,expensive,centre,italian,01223 448620,32 bridge street city centre,,4,True,False
+j restaurant,cheap,centre,fusion,01223 307581,86 regent street city centre,c.b 2,2,False,False
+la margherita,cheap,south,italian,01223 315232,15 magdalene street city centre,c.b 3,7,False,False
+cocum,expensive,east,gastropub,01223 366668,71 castle street city centre,c.b 3,4,True,True
+city stop restaurant,expensive,north,tuscan,01223 363270,cambridge city football club milton road chesterton,,3,False,True
+sala thong,expensive,west,thai,01223 323178,35 newnham road newnham,c.b 3,3,False,True
+don pasquale pizzeria,expensive,south,european,01223 350106,12 market hill city centre,,7,True,False
+little seoul,expensive,centre,korean,01223 308681,108 regent street city centre,c.b 2,9,False,False
+rice house,cheap,south,chinese,01223 367755,88 mill road city centre,,6,False,False
+the river bar steakhouse and grill,cheap,centre,modern european,01223 307030,quayside off bridge street,c.b 5,8,True,False
+nandos city centre,cheap,centre,portuguese,01223 327908,33-34 saint andrews street,c.b 2,3,False,False
+prezzo,moderate,west,italian,01799 521260,21 - 24 northampton road,c.b 3,1,False,False
+galleria,moderate,centre,european,01223 362054,33 bridge street,c.b 2,1,True,False
+bloomsbury restaurant,moderate,north,international,0871 942 9180,crowne plaza hotel 20 downing street,c.b 2,7,True,False
+the good luck chinese food takeaway,expensive,south,chinese,01223 244149,82 cherry hinton road cherry hinton,c.b 1,4,False,True
+the varsity restaurant,moderate,centre,international,01223 356060,35 saint andrews street city centre,c.b 2,5,False,True
+de luca cucina and bar,moderate,centre,modern european,01223 356666,83 regent street,c.b 2,6,False,False
+da vinci pizzeria,cheap,north,traditional,01223 351707,20 milton road chesterton,c.b 4,7,False,False
+shiraz restaurant,expensive,centre,mediterranean,01223 307581,84 regent street city centre,c.b 2,6,True,True
+the lucky star,cheap,south,chinese,01223 244277,cambridge leisure park clifton way cherry hinton,c.b 1,6,True,False
+royal spice,cheap,north,indian,01733 553355,victoria avenue chesterton,c.b 4,5,False,False
+ask,cheap,centre,seafood,01223 364917,12 bridge street city centre,c.b 2,7,False,False
+taj tandoori,expensive,south,portuguese,01223 412299,64 cherry hinton road cherry hinton,c.b 1,3,True,True
+tandoori palace,moderate,north,indian,01223 506055,68 histon road chesterton,c.b 4,1,True,False
+yippee noodle bar,moderate,centre,asian oriental,01223 518111,40428 king street city centre,c.b 1,1,True,True
+travellers rest,expensive,west,british,01223 276182,huntingdon road city centre,,2,True,False
+maharajah tandoori restaurant,expensive,east,indian,01223 358399,41518 castle street city centre,c.b 3,2,False,True
+shanghai family restaurant,moderate,east,chinese,01223 301761,39 burleigh street city centre,,2,False,False
+curry prince,expensive,east,indian,01223 566388,451 newmarket road fen ditton,c.b 5,2,False,False
+the gandhi,cheap,centre,indian,01223 353942,72 regent street city centre,,8,False,False
+kymmoy,expensive,centre,asian oriental,01223 311911,52 mill road city centre,c.b 1,6,True,True
+golden house,cheap,centre,polynesian,01842 753771,12 lensfield road city centre,,1,True,True
+bedouin,expensive,centre,african,01223 367660,100 mill road city centre,c.b 1,5,True,True
+pipasha restaurant,expensive,east,indian,01223 577786,newmarket road fen ditton,c.b 5,6,True,False
+charlie chan,cheap,centre,chinese,01223 361763,regent street city centre,c.b 2,1,True,True
+lan hong house,moderate,centre,thai,01223 350420,12 norfolk street city centre,,3,False,False
+la tasca,moderate,centre,spanish,01223 464630,14 -16 bridge street,c.b 2,7,True,False
+backstreet bistro,expensive,south,gastropub,01223 306306,2 sturton street city centre,c.b 1,8,True,True
+la raza,cheap,centre,spanish,01223 464550,4 - 6 rose crescent,c.b 2,8,True,True
+the slug and lettuce,expensive,east,gastropub,dontcare,34 - 35 green street,c.b 2,9,True,True
+restaurant one seven,moderate,north,british,01223 337766,de vere university arms regent street city centre,,1,True,False
+fitzbillies restaurant,expensive,centre,british,01223 352500,51 trumpington street city centre,,6,True,False
+anatolia,moderate,centre,turkish,01223 362372,30 bridge street city centre,c.b 2,7,False,True
+clowns cafe,moderate,centre,bistro,01223 355711,,c.b 1,7,True,False
+kohinoor,cheap,west,indian,01223 323639,74 mill road city centre,,4,True,True
+the cambridge chop house,cheap,centre,british,01223 359506,1 kings parade,,9,False,False
+gourmet burger kitchen,expensive,centre,north american,01223 312598,regent street city centre,c.b 2,2,True,False
+la mimosa,expensive,centre,mediterranean,01223 362525,thompsons lane fen ditton,c.b 5,4,False,True
+meze bar restaurant,expensive,centre,turkish,,196 mill road city centre,c.b 1,4,True,False
+the golden curry,expensive,south,australasian,01223 329432,,,1,True,False
+curry queen,moderate,,indian,,106 mill road city centre,c.b 1,4,False,False
+hakka,cheap,north,persian,01223 568988,milton road chesterton,c.b 4,8,True,False
+the oak bistro,moderate,centre,british,01223 323361,6 lensfield road,,6,False,True
+riverside brasserie,moderate,centre,gastropub,01223 259988,doubletree by hilton cambridge granta place mill lane,,9,False,True
+the copper kettle,moderate,east,british,01223 365068,4 kings parade city centre,c.b 2,4,False,False
+zizzi cambridge,expensive,south,italian,01223 365599,47-53 regent street,,7,False,True
+saffron brasserie,expensive,centre,jamaican,,,,9,True,True
+india house,expensive,west,indian,01223 461661,31 newnham road newnham,,3,False,False
+ali baba,moderate,centre,lebanese,01462 432565,59 hills road city centre,c.b 2,1,False,True
+rice boat,expensive,north,indian,01223 302800,37 newnham road newnham,,9,False,False
+midsummer house restaurant,expensive,centre,british,01223 369299,midsummer common,,5,True,False
+hotel du vin and bistro,moderate,centre,european,01223 227330,15 - 19 trumpington street,c.b 2,9,True,False
+darrys cookhouse and wine shop,expensive,south,modern european,01223 505015,40270 king street city centre,c.b 1,5,True,False
+pizza express,cheap,centre,spanish,01223 324033,,c.b 2,9,False,False
+jinling noodle bar,moderate,centre,cuban,01223 566188,11 peas hill city centre,c.b 2,3,False,True
+graffiti,moderate,north,indian,01223 277977,hotel felix whitehouse lane huntingdon road,c.b 3,8,False,True
+wagamama,expensive,centre,japanese,01223 462354,36 saint andrews street,c.b 2,5,False,True
+pizza hut city centre,cheap,centre,italian,01223 323737,regent street city centre,,9,True,False
+curry king,expensive,centre,seafood,01223 324351,5 jordans yard bridge street city centre,,4,True,True
+panahar,expensive,centre,mediterranean,,,,7,False,False
+ugly duckling,expensive,centre,catalan,,12 st. johns street city centre,,5,True,False
+pizza express fen ditton,moderate,centre,european,,jesus lane fen ditton,,5,True,False
+sesame restaurant and bar,moderate,,turkish,,,,9,False,True
+hk fusion,expensive,centre,thai,,21 burleigh street city centre,c.b 1,1,False,True
