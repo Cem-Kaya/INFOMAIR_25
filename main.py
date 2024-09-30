@@ -1,17 +1,13 @@
+from typing import Dict, List
 import pandas as pd
 from enum import Enum
 from Levenshtein import distance
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
+import json
 
-
+# Debug flag to enable/disable debug output
 DEBUG = True
-
-
-# global var
-preferences = {"food": None, "pricerange": None, "area": None}
-last_added_preference = None
-
 
 # Load the  logistic regression model BEST
 with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
@@ -20,11 +16,26 @@ with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
 # with open("classifiers/random_forest_deduped.pkl", "rb") as model_file:
 # model = pickle.load(model_file)
 
+# Load the utterances used for the chatbot
+with open("utterances.json") as utterances_file:
+    utterances = json.load(utterances_file)
+
 # Load the count vectorizer used during training to ensure the input format matches
 with open("classifiers/count_vectorizer.pkl", "rb") as vectorizer_file:
     count_vectorizer = pickle.load(vectorizer_file)
 
+# Load the restaurant database
+db = pd.read_csv("restaurant_info.csv")
 
+# The storage object to keep track of the conversation state
+storage = {
+    "preferences": {},
+    "suggestions": {},
+    "current_suggestion": {},
+    "exclude": [],
+}
+
+# The possible states of the dialog
 class DialogState(Enum):
     WELCOME = 1  # starting state
     ASK_PREFERENCES = 2  # User provides preferences
@@ -32,51 +43,99 @@ class DialogState(Enum):
     NO_RESTAURANT_FOUND = 4  # 404 No restaurant found
     SUGGEST_RESTAURANT = 5  # Suggest a restaurant somehow
     DELETE_DISLIKED_RESTAURANT = 6  # User dislikes the suggestion. delete it
-    OTHER_REQUEST = 7  #       other user request
+    OTHER_REQUEST = 7  # Other user request
     GOODBYE = 8  # End
 
+# The possible dialog acts
+class DialogAct(Enum):
+    ACK = "ack" # Acknowledge
+    AFFIRM = "affirm" # Positive confirmation
+    BYE = "bye" # Greeting at the end of the dialog
+    CONFIRM = "confirm" # Check if given information confirms to query
+    DENY = "deny" # Reject system suggestion
+    HELLO = "hello" # Greeting at the start of the dialog
+    INFORM = "inform" # State a preference or other information
+    NEGATE = "negate" # Negation
+    NULL = "null" # Noise or utterance without content
+    REPEAT = "repeat" # Ask for repetition
+    REQALTS = "reqalts" # Request alternative suggestions
+    REQMORE = "reqmore" # Request more suggestions
+    REQUEST = "request" # Ask for information
+    RESTART = "restart" # Attempt to restart the dialog
+    THANKYOU = "thankyou" # Axpress thanks
 
-db = pd.read_csv("restaurant_info.csv")
-
+# The possible preferences for each category
 options = {
     "food": db["food"].dropna().unique(),
     "pricerange": db["pricerange"].dropna().unique(),
     "area": db["area"].dropna().unique(),
 }
 
+# The keywords used to extract preferences from the user input
 keywords = {
     "food": ["food", "cuisine"],
-    "pricerange": ["price", "cost"],
-    "area": ["location", "area"],
+    "pricerange": ["price", "cost", "prices", "priced"],
+    "area": ["location", "area", "part"],
 }
 
+# Helper function to reply with a formatted utterance
+def reply(name, **kwargs):
+    print(utterances[name].format(**kwargs))
 
+# Helper function to update the storage
+def update_storage(table: str, dict: Dict):
+    if table not in storage:
+        storage[table] = {}
+
+    for key, value in dict.items():
+        if value:
+            storage[table][key] = value
+
+# Extract the preferences from the user input
 def extract_preferences(user_input):
     splitted_input = user_input.split()
     preferences = {"food": None, "pricerange": None, "area": None}
     suggestions = {"food": None, "pricerange": None, "area": None}
+    used = []
 
+    # loop through the keywords and values
     for key, values in keywords.items():
         min_distance = 1000
-        word = None
+        words = []
 
         for i, value in enumerate(splitted_input):
-            if value in values:
-                word = splitted_input[i - 1]
-                break
+            # check if the value is in the options
+            if value in options[key]:
+                preferences[key] = value
+                used.append(i)
 
-        if word:
-            if word in options[key]:
-                preferences[key] = word
-            else:
+            # check if the value is in the list of keywords
+            elif value in values and splitted_input[i - 1] in options[key]:
+                preferences[key] = splitted_input[i - 1]
+
+            # The value is not in the options, but it is close to one of the options
+            # Calculate the distance between the value and the options
+            elif value in values and i - 1 not in used:
                 for option in options[key]:
-                    if distance(word, option) < min_distance:
-                        min_distance = distance(word, option)
+                    dist = distance(splitted_input[i - 1], option)
+                    if dist < min_distance:
+                        min_distance = dist
                         suggestions[key] = option
 
     return (preferences, suggestions)
 
+# Get more information about the restaurant
+def get_more_info(restaurant, user_input):
+    if "address" in user_input:
+        print(f"Address: {restaurant['address']}")
+    if "phone" in user_input:
+        print(f"Phone: {restaurant['phone']}")
+    if "post" in user_input:
+        print(f"Postal code: {restaurant['postcode']}")
+    if "adress" in user_input:
+        print(f"Address: {restaurant['addr']}")
 
+# Find the restaurants that match the user preferences
 def find_restaurants(preferences):
     matched_restaurants = []
     for _, row in db.iterrows():
@@ -84,202 +143,184 @@ def find_restaurants(preferences):
         for key, value in preferences.items():
             if value and row[key] == value:
                 matched += 1
-        if matched > 0:
+        if matched > 0 and row["restaurantname"] not in storage["exclude"]:
             matched_restaurants.append({"restaurant": row, "matched": matched})
 
     sorted_restaurants = sorted(
         matched_restaurants, key=lambda x: x["matched"], reverse=True
     )
+
     return [x["restaurant"] for x in sorted_restaurants]
 
+# Helper function used to suggest a restaurant
+def suggest_restaurant(current_state: DialogState, user_input: str, model_prediction: DialogAct):
+    # find restaurants that match the user preferences
+    restaurants = find_restaurants(storage["preferences"])
 
-def dialog_manager(current_state, user_input, model_prediction):
-    global preferences
+    # if no restaurants are found, ask for more preferences
+    if not restaurants:
+        reply("no_matches")
+        return DialogState.ASK_PREFERENCES
+    else:
+        # store the current suggestion
+        storage["current_suggestion"] = restaurants[0]
+
+        # return the suggestion to the user
+        reply("suggest_restaurant", restaurant=restaurants[0]["restaurantname"])
+        return DialogState.OTHER_REQUEST
+
+# Helper function used to ask for user preferences
+def ask_preferences(current_state: DialogState, user_input: str, model_prediction: DialogAct):
+    global storage
+
+    # extract the preferences from the user input
+    preferences, suggestions = extract_preferences(user_input)
+
+    # update the storage with the new preferences
+    update_storage("preferences", preferences)
+    update_storage("suggestions", suggestions)
 
     if DEBUG:
-        print(f"---- current_state: {current_state}")
+        print(f"Preferences: {storage['preferences']}")
+        print(f"Suggestions: {storage['suggestions']}")
 
-    if model_prediction == "null":
-        print("I'm sorry, I didn't understand.")
+    # check if there are any suggestions
+    if any(suggestions.values()):
+        for key, value in suggestions.items():
+            if value:
+                # ask the user if the suggestion is correct
+                reply("ask_preferences", key=key, value=value)
+                return DialogState.ASK_CLEAR_PREFERENCES
+
+    # if we have enough preferences, suggest a restaurant
+    if len(storage["preferences"]) >= 2:
+        return suggest_restaurant(current_state, user_input, model_prediction)
+    else:
+        # ask the user for more preferences
+        reply("ask_more_preferences")
+        return DialogState.ASK_PREFERENCES
+
+# The main dialog manager
+# This function is called for each turn of the conversation
+def dialog_manager(current_state: DialogState, user_input: str, model_prediction: DialogAct):
+    global storage
+
+    if DEBUG:
+        print(f"Current state: {current_state}")
+        print(f"User input: {user_input}")
+        print(f"Model prediction: {model_prediction}")
+        print(f"Current preferences: {storage['preferences']}")
+
+    # handle the special dialog acts
+    if model_prediction == DialogAct.NULL:
+        # unclear input, ask the user to repeat
+        reply("null")
         return current_state
+    elif model_prediction == DialogAct.RESTART:
+        # clear the storage and start over
+        storage = {"preferences": {}, "suggestions": {}, "exclude": []}
 
-    elif model_prediction == "repeat":
-        return current_state
-
-    elif model_prediction == "restart":
+        reply("welcome")
         return DialogState.WELCOME
 
-    elif model_prediction == "bye":
-        return DialogState.GOODBYE
-
-    elif model_prediction == "hello":
-        return DialogState.WELCOME
-
-    elif model_prediction == "request" and DialogState.SUGGEST_RESTAURANT:
-        # TODO: Print restaurant info
-        NotImplementedError("Request not implemented yet")
-        return DialogState.SUGGEST_RESTAURANT
-
-    elif (
-        model_prediction == "deny"
-        or model_prediction == "negate"
-        and last_added_preference
-    ):
-        preferences[last_added_preference] = None
-        return DialogState.ASK_PREFERENCES
-
-    elif model_prediction == "ack":
-        print("I understand.")
-        return current_state
-
-    elif current_state == DialogState.WELCOME:
-        print("Welcome! What type of restaurant are you looking for?")
-        return DialogState.ASK_PREFERENCES
-
-    elif current_state == DialogState.ASK_PREFERENCES:
-        print("Please provide me with your preferences.")
-
-        non_none_preference_count = sum(
-            1 for value in preferences.values() if value is not None
-        )
-
-        if non_none_preference_count > 1:
-            matched_restaurants = find_restaurants(preferences)
-            if matched_restaurants:
-                print(
-                    f"Here is a recommendation: {matched_restaurants[0]['restaurantname']}."
-                )
-                return DialogState.SUGGEST_RESTAURANT
+    match current_state:
+        case DialogState.WELCOME:
+            if model_prediction == DialogAct.HELLO:
+                # greet the user
+                reply("welcome")
+                return DialogState.WELCOME
             else:
-                print("Sorry, no restaurant matches your preferences.")
-                return DialogState.NO_RESTAURANT_FOUND
+                # ask for user preferences
+                return ask_preferences(current_state, user_input, model_prediction)
 
-        (new_preferences, new_suggestions) = extract_preferences(user_input)
-        # check was there any preferences
-        if (
-            new_preferences["food"]
-            or new_preferences["pricerange"]
-            or new_preferences["area"]
-        ):
-            # update preferences
-            print(f"{new_preferences}, {preferences}")
-            for key, value in new_preferences.items():
-                if value:
-                    preferences[key] = value
-                    last_added_preference = key
-            return DialogState.ASK_PREFERENCES
-
-        if (
-            new_suggestions["food"]
-            or new_suggestions["pricerange"]
-            or new_suggestions["area"]
-        ):
-            for key, value in new_suggestions.items():
-                if value:
-                    print(
-                        f"I'm sorry, I didn't understand. Did you mean {value} for {key}?"
-                    )
-                    user_input = input().lower()
-                    if user_input == "no":
-                        return DialogState.ASK_CLEAR_PREFERENCES, preferences
-                    else:
-                        preferences[key] = value
-
-        if not (
-            new_preferences["food"]
-            or new_preferences["pricerange"]
-            or new_preferences["area"]
-        ):
-            print(
-                "I'm sorry, I didn't understand. Could you please provide a more clear answer?"
-            )
-            return DialogState.ASK_CLEAR_PREFERENCES
-        else:
-            matched_restaurants = find_restaurants(preferences)
-            if matched_restaurants:
-                print(
-                    f"Here is a recommendation: {matched_restaurants[0]['restaurantname']}."
-                )
-                return DialogState.SUGGEST_RESTAURANT
+        case DialogState.ASK_PREFERENCES:
+            if model_prediction == DialogAct.INFORM:
+                return ask_preferences(current_state, user_input, model_prediction)
             else:
-                print("Sorry, no restaurant matches your preferences.")
-                return DialogState.NO_RESTAURANT_FOUND
+                # the user did not provide any preferences, ask again
+                reply("clear_preferences")
+                return DialogState.ASK_PREFERENCES
 
-    elif current_state == DialogState.ASK_CLEAR_PREFERENCES:
+        case DialogState.ASK_CLEAR_PREFERENCES:
+            if model_prediction == DialogAct.ACK or model_prediction == DialogAct.AFFIRM:
+                # update the preferences with the suggestions
+                for key, value in storage["suggestions"].items():
+                    storage["preferences"][key] = value
+                    storage["suggestions"][key] = None
 
-        tmp = extract_preferences(user_input)
-        new_preferences = tmp[0]
-        new_suggestions = tmp[1]
+                # if we have enough preferences, suggest a restaurant
+                if len(storage["preferences"]) >= 2:
+                    return suggest_restaurant(current_state, user_input, model_prediction)
 
-        if DEBUG:
-            print(f"---- preferences: {preferences}")
+            # if the user does not agree with the suggestions, or gives new preferences, parse them
+            return ask_preferences(current_state, user_input, model_prediction)
 
-        if (
-            new_preferences["food"]
-            or new_preferences["pricerange"]
-            or new_preferences["area"]
-        ):
-            # update preferences
-            for key, value in new_preferences.items():
-                if value:
-                    preferences[key] = value
-                    last_added_preference = key
+        case DialogState.OTHER_REQUEST:
+            if model_prediction == DialogAct.NEGATE or model_prediction == DialogAct.REQALTS:
+                # The user did not like the suggestion, exclude it and ask for more preferences
+                storage["exclude"].append(storage["current_suggestion"]["restaurantname"])
 
-            return DialogState.ASK_PREFERENCES
-        elif (
-            new_suggestions["food"]
-            or new_suggestions["pricerange"]
-            or new_suggestions["area"]
-        ):
-            # update preferences
-            for key, value in new_suggestions.items():
-                if value:
-                    preferences[key] = value
-            return DialogState.ASK_PREFERENCES
-        else:
-            print("I still couldn't understand. Could you please try again?")
-            return DialogState.ASK_CLEAR_PREFERENCES
+                return ask_preferences(current_state, user_input, model_prediction)
 
-    elif current_state == DialogState.SUGGEST_RESTAURANT:
-        print("Would you like this restaurant? If not, I can suggest another.")
-        return DialogState.DELETE_DISLIKED_RESTAURANT
+            elif model_prediction == DialogAct.REQMORE:
+                # The user asked for more restaurants, suggest the next best one
+                storage["exclude"].append(storage["current_suggestion"]["restaurantname"])
+                restaurants = find_restaurants(storage["preferences"])
 
-    elif current_state == DialogState.DELETE_DISLIKED_RESTAURANT:
-        if model_prediction == "deny" or model_prediction == "reqmore":
-            print("Removing that option, let me suggest another.")
-            # Logic to suggest another restaurant
-            return DialogState.SUGGEST_RESTAURANT
-        elif model_prediction == "reqalts":
-            return DialogState.ASK_PREFERENCES
-        else:
-            print("Great! I'm glad you like it.")
-            return DialogState.OTHER_REQUEST
+                if restaurants:
+                    storage["exclude"].append(restaurants[0]["restaurantname"])
+                    reply("remove_option")
+                    reply("suggest_restaurant", restaurant=restaurants[0]["restaurantname"])
 
-    elif current_state == DialogState.NO_RESTAURANT_FOUND:
-        print("Unfortunately, no restaurants matched your preferences.")
-        preferences = {"food": None, "pricerange": None, "area": None}
-        return DialogState.ASK_PREFERENCES
+                    return DialogState.OTHER_REQUEST
+                else:
+                    reply("no_more_matches")
+                    return DialogState.ASK_PREFERENCES
 
-    elif current_state == DialogState.OTHER_REQUEST:
-        print("Do you have any other requests or preferences?")
-        # Handle other requests or end the dialog
-        return DialogState.GOODBYE
 
-    elif current_state == DialogState.GOODBYE:
-        print("Goodbye! Have a nice day.")
-        return None  # End the conversation
+            # the user asked for more information about the current suggestion
+            elif model_prediction == DialogAct.REQUEST:
+                get_more_info(storage["current_suggestion"], user_input)
+                return DialogState.OTHER_REQUEST
+
+            # the user is finished, say goodbye
+            elif model_prediction == DialogAct.THANKYOU or model_prediction == DialogAct.BYE:
+                reply("goodbye")
+                return DialogState.GOODBYE
+
+            else:
+                return DialogState.OTHER_REQUEST
+
+        # the conversation is finished
+        case DialogState.GOODBYE:
+            if model_prediction == DialogAct.BYE:
+                reply("goodbye")
+                return None
+            else:
+                return DialogState.GOODBYE
 
 
 def main():
+    # initialize the dialog manager
     current_state = DialogState.WELCOME
-    print("Welcome to project 25 restaurant recommender! how can I help you today?")
+    reply("greeting")
+
     while current_state:
+        # get user input
         user_input = input().lower()
+
+        # get the model prediction
         model_input = count_vectorizer.transform([user_input])
         prediction = model.predict(model_input)
+        action = DialogAct(prediction)
+
+
         if DEBUG:
-            print(f"---- Model prediction: {prediction}")
-        current_state = dialog_manager(current_state, user_input, prediction)
+            print(f"---- Model prediction: {prediction} ({action})")
+
+        # call the dialog manager
+        current_state = dialog_manager(current_state, user_input, action)
+
         if DEBUG:
             print(f"---- Output_state: {current_state}")
 

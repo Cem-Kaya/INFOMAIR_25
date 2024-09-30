@@ -1,12 +1,17 @@
 {
-    "welcome": "Welcome! What type of restaurant are you looking for?",
-    "provide_preferences": "Please provide me with your preferences.",
-    "unknown": "I'm sorry, I didn't understand. Did you mean {value} for {key}?",
-    "clear_preferences": "I'm sorry, I didn't understand. Could you please provide a more clear answer?",
-    "still_unknown": "I still couldn't understand. Could you please try again?",
-    "recommendation": "Here is a recommendation: {recommendation}.",
-    "no_matches": "Sorry, no restaurant matches your preferences.",
-    "suggest_alternatives": "Would you like this restaurant? If not, I can suggest another.",
-    "remove_option": "Removing that option, let me suggest another.",
-    "liked": "Great! I'm glad you like it."
+  "greeting": "Welcome to project 25 restaurant recommender! how can I help you today?",
+  "welcome": "Welcome! What type of restaurant are you looking for?",
+  "provide_preferences": "Please provide me with your preferences.",
+  "ask_preferences": "I'm sorry, I didn't understand. Did you mean {value} for {key}?",
+  "ask_more_preferences": "Do you have any other preferences?",
+  "clear_preferences": "I'm sorry, I didn't understand. Could you please provide a more clear answer?",
+  "still_unknown": "I still couldn't understand. Could you please try again?",
+  "recommendation": "Here is a recommendation: {recommendation}.",
+  "no_matches": "Sorry, no restaurant matches your preferences.",
+  "no_more_matches": "Sorry, no more restaurants match your preferences.",
+  "suggest_restaurant": "I think you might like {restaurant}.",
+  "suggest_alternatives": "Would you like this restaurant? If not, I can suggest another.",
+  "remove_option": "Removing that option, let me suggest another.",
+  "liked": "Great! I'm glad you like it.",
+  "null": "I'm sorry, I didn't understand, could you repeat that?"
 }
