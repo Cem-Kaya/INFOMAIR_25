@@ -8,15 +8,12 @@ from sklearn.feature_extraction.text import CountVectorizer
 DEBUG = True
 
 
-<<<<<<< Updated upstream
-#global var
+# global var
 preferences = {"food": None, "pricerange": None, "area": None}
+last_added_preference = None
 
 
-# Load the  logistic regression model BEST 
-=======
 # Load the  logistic regression model BEST
->>>>>>> Stashed changes
 with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
     model = pickle.load(model_file)
 # Load the  random forest model BEST
@@ -97,19 +94,81 @@ def find_restaurants(preferences):
 
 
 def dialog_manager(current_state, user_input, model_prediction):
+    global preferences
 
     if DEBUG:
         print(f"---- current_state: {current_state}")
 
-    preferences = {"food_type": None, "pricerange": None, "area": None}
-    if current_state == DialogState.WELCOME:
+    if model_prediction == "null":
+        print("I'm sorry, I didn't understand.")
+        return current_state
+
+    elif model_prediction == "repeat":
+        return current_state
+
+    elif model_prediction == "restart":
+        return DialogState.WELCOME
+
+    elif model_prediction == "bye":
+        return DialogState.GOODBYE
+
+    elif model_prediction == "hello":
+        return DialogState.WELCOME
+
+    elif model_prediction == "request" and DialogState.SUGGEST_RESTAURANT:
+        # TODO: Print restaurant info
+        NotImplementedError("Request not implemented yet")
+        return DialogState.SUGGEST_RESTAURANT
+
+    elif (
+        model_prediction == "deny"
+        or model_prediction == "negate"
+        and last_added_preference
+    ):
+        preferences[last_added_preference] = None
+        return DialogState.ASK_PREFERENCES
+
+    elif model_prediction == "ack":
+        print("I understand.")
+        return current_state
+
+    elif current_state == DialogState.WELCOME:
         print("Welcome! What type of restaurant are you looking for?")
         return DialogState.ASK_PREFERENCES
 
     elif current_state == DialogState.ASK_PREFERENCES:
         print("Please provide me with your preferences.")
+
+        non_none_preference_count = sum(
+            1 for value in preferences.values() if value is not None
+        )
+
+        if non_none_preference_count > 1:
+            matched_restaurants = find_restaurants(preferences)
+            if matched_restaurants:
+                print(
+                    f"Here is a recommendation: {matched_restaurants[0]['restaurantname']}."
+                )
+                return DialogState.SUGGEST_RESTAURANT
+            else:
+                print("Sorry, no restaurant matches your preferences.")
+                return DialogState.NO_RESTAURANT_FOUND
+
         (new_preferences, new_suggestions) = extract_preferences(user_input)
         # check was there any preferences
+        if (
+            new_preferences["food"]
+            or new_preferences["pricerange"]
+            or new_preferences["area"]
+        ):
+            # update preferences
+            print(f"{new_preferences}, {preferences}")
+            for key, value in new_preferences.items():
+                if value:
+                    preferences[key] = value
+                    last_added_preference = key
+            return DialogState.ASK_PREFERENCES
+
         if (
             new_suggestions["food"]
             or new_suggestions["pricerange"]
@@ -147,6 +206,7 @@ def dialog_manager(current_state, user_input, model_prediction):
                 return DialogState.NO_RESTAURANT_FOUND
 
     elif current_state == DialogState.ASK_CLEAR_PREFERENCES:
+
         tmp = extract_preferences(user_input)
         new_preferences = tmp[0]
         new_suggestions = tmp[1]
@@ -163,6 +223,8 @@ def dialog_manager(current_state, user_input, model_prediction):
             for key, value in new_preferences.items():
                 if value:
                     preferences[key] = value
+                    last_added_preference = key
+
             return DialogState.ASK_PREFERENCES
         elif (
             new_suggestions["food"]
@@ -183,10 +245,12 @@ def dialog_manager(current_state, user_input, model_prediction):
         return DialogState.DELETE_DISLIKED_RESTAURANT
 
     elif current_state == DialogState.DELETE_DISLIKED_RESTAURANT:
-        if user_input == "no":
+        if model_prediction == "deny" or model_prediction == "reqmore":
             print("Removing that option, let me suggest another.")
             # Logic to suggest another restaurant
             return DialogState.SUGGEST_RESTAURANT
+        elif model_prediction == "reqalts":
+            return DialogState.ASK_PREFERENCES
         else:
             print("Great! I'm glad you like it.")
             return DialogState.OTHER_REQUEST

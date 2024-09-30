@@ -1,0 +1,12 @@
+{
+    "welcome": "Welcome! What type of restaurant are you looking for?",
+    "provide_preferences": "Please provide me with your preferences.",
+    "unknown": "I'm sorry, I didn't understand. Did you mean {value} for {key}?",
+    "clear_preferences": "I'm sorry, I didn't understand. Could you please provide a more clear answer?",
+    "still_unknown": "I still couldn't understand. Could you please try again?",
+    "recommendation": "Here is a recommendation: {recommendation}.",
+    "no_matches": "Sorry, no restaurant matches your preferences.",
+    "suggest_alternatives": "Would you like this restaurant? If not, I can suggest another.",
+    "remove_option": "Removing that option, let me suggest another.",
+    "liked": "Great! I'm glad you like it."
+}
