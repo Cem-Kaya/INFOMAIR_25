@@ -8,6 +8,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 DEBUG = True
 
 
+#global var
+preferences = {"food": None, "pricerange": None, "area": None}
+
+
 # Load the  logistic regression model BEST 
 with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
     model = pickle.load(model_file)
@@ -86,11 +90,10 @@ def find_restaurants(preferences):
     return [x["restaurant"] for x in sorted_restaurants]
 
 def dialog_manager(current_state, user_input, model_prediction):
-    
+    global preferences
     if DEBUG:
         print(f"---- current_state: {current_state}")
     
-    preferences = {"food_type": None, "pricerange": None, "area": None}
     if current_state == DialogState.WELCOME:
         print("Welcome! What type of restaurant are you looking for?")
         return DialogState.ASK_PREFERENCES
@@ -98,30 +101,40 @@ def dialog_manager(current_state, user_input, model_prediction):
     elif current_state == DialogState.ASK_PREFERENCES:
         print("Please provide me with your preferences.")
         (new_preferences, new_suggestions) = extract_preferences(user_input)
-        # check was there any preferences
+
+        if DEBUG:
+            print(f"---- new_preferences: {new_preferences}")
+            print(f"---- new_suggestions: {new_suggestions}")
+
+        # Update the preferences dictionary based on new preferences
+        for key in new_preferences:
+            if new_preferences[key]:
+                preferences[key] = new_preferences[key]
+
+        # Check if there were any suggestions
         if new_suggestions["food"] or new_suggestions["pricerange"] or new_suggestions["area"]:
             for key, value in new_suggestions.items():
                 if value:
                     print(f"I'm sorry, I didn't understand. Did you mean {value} for {key}?")
                     user_input = input().lower()
                     if user_input == "no":
-                        return DialogState.ASK_CLEAR_PREFERENCES
+                        return DialogState.ASK_CLEAR_PREFERENCES, preferences
                     else:
                         preferences[key] = value
 
-        if not ( new_preferences["food"] or new_preferences["pricerange"] or new_preferences["area"] ):
+        # If no valid preferences were given, ask for clarification
+        if not (new_preferences["food"] or new_preferences["pricerange"] or new_preferences["area"]):
             print("I'm sorry, I didn't understand. Could you please provide a more clear answer?")
-            return DialogState.ASK_CLEAR_PREFERENCES
-        else:  
+            return DialogState.ASK_CLEAR_PREFERENCES, preferences
+        else:
             matched_restaurants = find_restaurants(preferences)
             if matched_restaurants:
                 print(f"Here is a recommendation: {matched_restaurants[0]['restaurantname']}.")
-                return DialogState.SUGGEST_RESTAURANT
+                return DialogState.SUGGEST_RESTAURANT, preferences
             else:
                 print("Sorry, no restaurant matches your preferences.")
-                return DialogState.NO_RESTAURANT_FOUND
-        
-    
+                return DialogState.NO_RESTAURANT_FOUND, preferences
+
     elif current_state == DialogState.ASK_CLEAR_PREFERENCES:
         tmp = extract_preferences(user_input)
         new_preferences = tmp[0]
@@ -177,6 +190,7 @@ def dialog_manager(current_state, user_input, model_prediction):
 def main():
     current_state = DialogState.WELCOME
     print("Welcome to project 25 restaurant recommender! how can I help you today?") 
+
     while current_state:
         user_input = input().lower()
         model_input = count_vectorizer.transform([user_input])
@@ -186,7 +200,7 @@ def main():
         current_state = dialog_manager(current_state, user_input, prediction)
         if DEBUG:
             print(f"---- Output_state: {current_state}")
-            
+            print(f"---- Preferences: {preferences}")
             
             
 if __name__ == "__main__":
