@@ -25,7 +25,7 @@ with open("classifiers/count_vectorizer.pkl", "rb") as vectorizer_file:
     count_vectorizer = pickle.load(vectorizer_file)
 
 # Load the restaurant database
-db = pd.read_csv("restaurant_info.csv")
+db = pd.read_csv("updated_restaurant_info.csv")
 
 # The storage object to keep track of the conversation state
 storage = {
@@ -40,11 +40,12 @@ class DialogState(Enum):
     WELCOME = 1  # starting state
     ASK_PREFERENCES = 2  # User provides preferences
     ASK_CLEAR_PREFERENCES = 3  # Ask for more clear answers
-    NO_RESTAURANT_FOUND = 4  # 404 No restaurant found
-    SUGGEST_RESTAURANT = 5  # Suggest a restaurant somehow
-    DELETE_DISLIKED_RESTAURANT = 6  # User dislikes the suggestion. delete it
-    OTHER_REQUEST = 7  # Other user request
-    GOODBYE = 8  # End
+    ASK_ADDITIONAL_REQUIREMENTS = 4  # Ask for additional requirements
+    NO_RESTAURANT_FOUND = 5  # 404 No restaurant found
+    SUGGEST_RESTAURANT = 6  # Suggest a restaurant somehow
+    DELETE_DISLIKED_RESTAURANT = 7  # User dislikes the suggestion. delete it
+    OTHER_REQUEST = 8  # Other user request
+    GOODBYE = 9  # End
 
 # The possible dialog acts
 class DialogAct(Enum):
@@ -76,6 +77,22 @@ keywords = {
     "food": ["food", "cuisine"],
     "pricerange": ["price", "cost", "prices", "priced"],
     "area": ["location", "area", "part"],
+}
+
+consequents = ["touristic", "assigned seats", "children", "romantic"]
+
+inference_rules = {
+    "touristic": lambda x: x["food_quality"] > 7 and x["pricerange"] == "cheap" and not x["food"] == "romanian",
+    "assigned seats": lambda x: x["crowdedness"],
+    "children": lambda x: not x["length_of_stay"],
+    "romantic": lambda x: not x["crowdedness"] and x["length_of_stay"]
+}
+
+explainers = {
+    "touristic": "it is touristic because the food quality is high, the price is cheap, and it is not Romanian",
+    "assigned seats": "it has assigned seats because it is crowded",
+    "children": "it is suitable for children because people usually do not stay long",
+    "romantic": "it is romantic because it is not crowded and people stay long"
 }
 
 # Helper function to reply with a formatted utterance
@@ -152,25 +169,8 @@ def find_restaurants(preferences):
 
     return [x["restaurant"] for x in sorted_restaurants]
 
-# Helper function used to suggest a restaurant
-def suggest_restaurant(current_state: DialogState, user_input: str, model_prediction: DialogAct):
-    # find restaurants that match the user preferences
-    restaurants = find_restaurants(storage["preferences"])
-
-    # if no restaurants are found, ask for more preferences
-    if not restaurants:
-        reply("no_matches")
-        return DialogState.ASK_PREFERENCES
-    else:
-        # store the current suggestion
-        storage["current_suggestion"] = restaurants[0]
-
-        # return the suggestion to the user
-        reply("suggest_restaurant", restaurant=restaurants[0]["restaurantname"])
-        return DialogState.OTHER_REQUEST
-
 # Helper function used to ask for user preferences
-def ask_preferences(current_state: DialogState, user_input: str, model_prediction: DialogAct):
+def ask_preferences(user_input: str):
     global storage
 
     # extract the preferences from the user input
@@ -194,7 +194,8 @@ def ask_preferences(current_state: DialogState, user_input: str, model_predictio
 
     # if we have enough preferences, suggest a restaurant
     if len(storage["preferences"]) >= 2:
-        return suggest_restaurant(current_state, user_input, model_prediction)
+        reply("ask_additional_requirements")
+        return DialogState.ASK_ADDITIONAL_REQUIREMENTS
     else:
         # ask the user for more preferences
         reply("ask_more_preferences")
@@ -231,11 +232,11 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
                 return DialogState.WELCOME
             else:
                 # ask for user preferences
-                return ask_preferences(current_state, user_input, model_prediction)
+                return ask_preferences(user_input)
 
         case DialogState.ASK_PREFERENCES:
             if model_prediction == DialogAct.INFORM:
-                return ask_preferences(current_state, user_input, model_prediction)
+                return ask_preferences(user_input)
             else:
                 # the user did not provide any preferences, ask again
                 reply("clear_preferences")
@@ -250,17 +251,51 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
 
                 # if we have enough preferences, suggest a restaurant
                 if len(storage["preferences"]) >= 2:
-                    return suggest_restaurant(current_state, user_input, model_prediction)
+                    reply("ask_additional_requirements")
+                    return DialogState.ASK_ADDITIONAL_REQUIREMENTS
 
             # if the user does not agree with the suggestions, or gives new preferences, parse them
-            return ask_preferences(current_state, user_input, model_prediction)
+            return ask_preferences(user_input)
+        
+        case DialogState.ASK_ADDITIONAL_REQUIREMENTS:
+            restaurants = find_restaurants(storage["preferences"])
+            requirements = [consequent for consequent in consequents if consequent in user_input]
+
+            if not restaurants:
+                reply("no_matches")
+                return DialogState.ASK_PREFERENCES
+
+            if not requirements:
+                storage["current_suggestion"] = restaurants[0]
+                reply("suggest_restaurant", restaurant=restaurants[0]["restaurantname"])
+                reply("other_request")
+                return DialogState.OTHER_REQUEST
+            
+            restaurant_names = [restaurant["restaurantname"] for restaurant in restaurants]
+            for requirement in requirements:
+                for restaurant in restaurants:
+                    if not inference_rules[requirement](restaurant):
+                        restaurant_names.remove(restaurant["restaurantname"])
+    
+            if not restaurant_names:
+                reply("no_matches")
+                return DialogState.ASK_PREFERENCES
+            
+            restaurant = next(restaurant for restaurant in restaurants if restaurant["restaurantname"] == restaurant_names[0])
+    
+            storage["current_suggestion"] = restaurant
+
+            explanation = " and ".join([explainers[requirement] for requirement in requirements])
+            reply("suggest_restaurant_with_explanation", restaurant=restaurant["restaurantname"], explanation=explanation)
+            reply("other_request")
+            return DialogState.OTHER_REQUEST
 
         case DialogState.OTHER_REQUEST:
             if model_prediction == DialogAct.NEGATE or model_prediction == DialogAct.REQALTS:
                 # The user did not like the suggestion, exclude it and ask for more preferences
                 storage["exclude"].append(storage["current_suggestion"]["restaurantname"])
 
-                return ask_preferences(current_state, user_input, model_prediction)
+                return ask_preferences(user_input)
 
             elif model_prediction == DialogAct.REQMORE:
                 # The user asked for more restaurants, suggest the next best one
@@ -289,6 +324,7 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
                 return DialogState.GOODBYE
 
             else:
+                reply("null")
                 return DialogState.OTHER_REQUEST
 
         # the conversation is finished
