@@ -9,8 +9,12 @@ import time
 from tqdm import tqdm
 
 
+
 # Debug flag to enable/disable debug output
 DEBUG = True
+
+
+
 
 # Load the  logistic regression model BEST
 with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
@@ -161,6 +165,55 @@ def get_more_info(restaurant, user_input):
         print(f"Postal code: {restaurant['postcode']}")
     if "adress" in user_input:
         print(f"Address: {restaurant['addr']}")
+
+import pyaudio
+import wave
+import threading
+
+# Configuration for the audio stream
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
+CHUNK = 1024
+WAVE_OUTPUT_FILENAME = "TMP_audio/output.wav"
+
+# Function to handle the recording
+def record_audio():
+    audio = pyaudio.PyAudio()
+
+    # Open the stream for recording
+    stream = audio.open(format=FORMAT, channels=CHANNELS,
+                        rate=RATE, input=True,
+                        frames_per_buffer=CHUNK)
+    
+    print("Recording...")
+
+    frames = []
+
+    # Continue recording until stopped
+    while recording_event.is_set():
+        data = stream.read(CHUNK)
+        frames.append(data)
+
+    # Stop and close the stream
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
+
+    # Save the recording to a file
+    with wave.open(WAVE_OUTPUT_FILENAME, 'wb') as wave_file:
+        wave_file.setnchannels(CHANNELS)
+        wave_file.setsampwidth(audio.get_sample_size(FORMAT))
+        wave_file.setframerate(RATE)
+        wave_file.writeframes(b''.join(frames))
+    
+    print("Recording saved as", WAVE_OUTPUT_FILENAME)
+
+# Initialize the event to control recording
+recording_event = threading.Event()
+
+
+
 
 # Find the restaurants that match the user preferences
 def find_restaurants(preferences):
@@ -345,6 +398,16 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
             else:
                 return DialogState.GOODBYE
 
+if conf["asr"]:
+    import  torch
+    from faster_whisper import WhisperModel # pip install git+https://github.com/m-bain/whisperx.git
+
+    if DEBUG:
+        print("CUDA GPU accalarion status: ",torch.cuda.is_available())
+    print("if no cuda device detected please turn off asr in config.json !!!!!!")
+
+    Whisper_model = WhisperModel("large-v3", device="cuda", compute_type="float16")
+    # Whisper_model = WhisperModel("medium", device="cpu", compute_type="int8")
 
 def main():
     # initialize the dialog manager
@@ -353,8 +416,31 @@ def main():
 
     while current_state:
         # get user input
-        user_input = input().lower()
+        
 
+        
+        if conf["asr"]:
+            # Start recording audio
+            recording_event.set()
+            recording_thread = threading.Thread(target=record_audio)
+            recording_thread.start()
+            input("Press Enter to stop recording...")  # User will press Enter to stop the recording
+            recording_event.clear()
+            recording_thread.join()
+
+            #ASR
+            segments, info = Whisper_model.transcribe("TMP_audio/output.wav", beam_size=5 ,language="en"  ) # , language="tr" )
+            
+            result = ' '.join(i[4] for i in segments)
+
+            user_input = str(result)  # 
+            print(f"You (ASR): {user_input}")
+        else:
+            # Get user input via text
+            user_input = input("You: ").lower()
+        
+        
+        
         # get the model prediction
         model_input = count_vectorizer.transform([user_input])
         prediction = model.predict(model_input)

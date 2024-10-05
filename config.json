@@ -1,4 +1,6 @@
 {
     "delay_responses": true,
-    "add_more" : true
+    "add_more" : true,
+    "asr": false
+
 }
