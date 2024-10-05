@@ -1,6 +1,10 @@
 {
   "greeting": "Welcome to project 25 restaurant recommender! how can I help you today?",
   "welcome": "Welcome! What type of restaurant are you looking for?",
+
+  "ask_input_format": "Would you like to communicate with me via typing or speech recognition?",
+  "ask_export_format": "Would you like me to communicate via text or speech output?",
+  
   "provide_preferences": "Please provide me with your preferences.",
   "ask_preferences": "I'm sorry, I didn't understand. Did you mean {value} for {key}?",
   "ask_more_preferences": "Do you have any other preferences?",
