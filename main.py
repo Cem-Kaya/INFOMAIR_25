@@ -7,7 +7,9 @@ from sklearn.feature_extraction.text import CountVectorizer
 import json
 import time
 from tqdm import tqdm
-
+import pyaudio
+import wave
+import threading
 
 
 # Debug flag to enable/disable debug output
@@ -104,6 +106,11 @@ explainers = {
     "children": "it is suitable for children because people usually do not stay long",
     "romantic": "it is romantic because it is not crowded and people stay long"
 }
+if conf["tts"]:
+    import pyttsx3
+
+    tts_engine = pyttsx3.init()
+
 
 # Helper function to reply with a formatted utterance
 def reply(name, **kwargs):
@@ -112,6 +119,9 @@ def reply(name, **kwargs):
         for _ in tqdm(range(150), desc="Generating Response...", bar_format="{l_bar}{bar} [elapsed: {elapsed}]", ncols=70, leave=False):
             time.sleep(0.01)
     print(utterances[name].format(**kwargs))
+    if conf["tts"]:
+        tts_engine.say(str(utterances[name].format(**kwargs)))
+        tts_engine.runAndWait()
 
 # Helper function to update the storage
 def update_storage(table: str, dict: Dict):
@@ -166,9 +176,7 @@ def get_more_info(restaurant, user_input):
     if "adress" in user_input:
         print(f"Address: {restaurant['addr']}")
 
-import pyaudio
-import wave
-import threading
+
 
 # Configuration for the audio stream
 FORMAT = pyaudio.paInt16
