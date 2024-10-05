@@ -15,5 +15,7 @@
   "remove_option": "Removing that option, let me suggest another.",
   "other_request": "Do you have any other requests?",
   "liked": "Great! I'm glad you like it.",
-  "null": "I'm sorry, I didn't understand, could you repeat that?"
+  "null": "I'm sorry, I didn't understand, could you repeat that?", 
+  "goodbye": "Thank you for using the group 25 restaurant recommendation system. Goodbye!"
+
 }

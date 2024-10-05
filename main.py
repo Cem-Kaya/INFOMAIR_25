@@ -5,6 +5,9 @@ from Levenshtein import distance
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 import json
+import time
+from tqdm import tqdm
+
 
 # Debug flag to enable/disable debug output
 DEBUG = True
@@ -19,6 +22,9 @@ with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
 # Load the utterances used for the chatbot
 with open("utterances.json") as utterances_file:
     utterances = json.load(utterances_file)
+with open("config.json") as config_file:
+    conf = json.load(config_file)
+
 
 # Load the count vectorizer used during training to ensure the input format matches
 with open("classifiers/count_vectorizer.pkl", "rb") as vectorizer_file:
@@ -97,6 +103,10 @@ explainers = {
 
 # Helper function to reply with a formatted utterance
 def reply(name, **kwargs):
+    # Introduce a delay before showing system responses
+    if conf["delay_responses"] == True:
+        for _ in tqdm(range(150), desc="Generating Response...", bar_format="{l_bar}{bar} [elapsed: {elapsed}]", ncols=70, leave=False):
+            time.sleep(0.01)
     print(utterances[name].format(**kwargs))
 
 # Helper function to update the storage
