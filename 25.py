@@ -46,31 +46,37 @@ def base_line1(data):
 # TODO: Improve the rules to increase the accuracy of the model
 
 rules = {
-    "ack": ["okay", "uhm", "fine", "sure"],
-    "affirm": ["yes", "right", "good", "do that", "agreed"],
-    "bye": ["bye", "goodbye", "see you", "see you later"],
-    "repeat": ["repeat"],
-    "reqalts": ["how", "else" ],
-    "reqmore": ["more"],
-    "request": ["address", "post", "what", "postal", "phone"],
-    "confirm": ["is it", "does it"],
-    "deny": ["not", "dont"],
-    "hello": ["hello", "hi"],    
-    "negate": ["no"],
-    "null": ["cough", "noise","sil", "unintelligible"],   
-    "restart": ["start over"],
-    "thankyou" : ["thank" ],
-    "inform" : ["looking", "any", "matter","care", "north" ,"west", "east", "south" "european", "italian", "korean", "food",
-                "moderate" ,  "cheap","expensive", 
-                ],
+    'bye': ['bye', 'goodbye', 'see you', ],
+    'affirm': ['yes', "yep",'right', 'do that', 'agreed', 'yeah', 'yea', 'correct'],
+    'repeat': ['repeat'],
+    'reqalts': ['else', 'anything', 'about', 'another', 'next', 'other'],
+    'reqmore': ['more'],
+    'request': ['address', 'post', 'what', 'postal', 'phone', 'number', 'whats', 'where', 'venue', 'give', 'located',  'telephone'],
+    'ack': ['uhm', 'fine', 'sure'],
+    'confirm': ['is it', 'does it'],
+    'deny': ['not', 'wrong'],
+    'hello': ['hello'],
+    'negate': ["nope" , "not that" ],
+    'null': ['cough', 'noise', 'sil', 'unintelligible', 'breathing', 'inaudible'],
+    'restart': [ 'start', 'restart', 'again'],
+    'thankyou': ['thank', 'thanks', 'goodbye'],
+    'inform': [
+        'looking', 'any', 'matter', 'care', 'north', 'west', 'east', 'south', 'european', 'italian', 'korean',
+        'food', 'moderate', 'cheap', 'expensive', 'restaurant', 'town', 'part',  'find', 'center',
+    ]
 }
+
+
+
+
+
 
 def base_line2(x):
     for key, value in rules.items():
         for v in value:
             if v in x:
                 return key
-    return "null"
+    return "inform"
 
 # %%
 # Evaluate the baseline models
