@@ -11,26 +11,20 @@ import pyaudio
 import wave
 import threading
 
-
 # Debug flag to enable/disable debug output
 DEBUG = True
 
+# Load the configuration file
+with open("config.json") as config_file:
+    conf = json.load(config_file)
 
-
-
-# Load the  logistic regression model BEST
-with open("classifiers/logistic_regression_deduped.pkl", "rb") as model_file:
+# Load the selected model
+with open(conf["model"], "rb") as model_file:
     model = pickle.load(model_file)
-# Load the  random forest model BEST
-# with open("classifiers/random_forest_deduped.pkl", "rb") as model_file:
-# model = pickle.load(model_file)
 
 # Load the utterances used for the chatbot
 with open("utterances.json") as utterances_file:
     utterances = json.load(utterances_file)
-with open("config.json") as config_file:
-    conf = json.load(config_file)
-
 
 # Load the count vectorizer used during training to ensure the input format matches
 with open("classifiers/count_vectorizer.pkl", "rb") as vectorizer_file:

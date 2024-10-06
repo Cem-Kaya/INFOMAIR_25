@@ -1,6 +1,7 @@
 {
-    "delay_responses": true,
-    "casual_mode": true,
-    "asr": false, 
+    "model": "classifiers/logistic_regression_deduped.pkl",
+    "delay_responses": false,
+    "casual_mode": false,
+    "asr": false,
     "tts": false
 }
