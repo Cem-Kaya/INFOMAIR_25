@@ -118,10 +118,21 @@ def reply(name, **kwargs):
     if conf["delay_responses"] == True:
         for _ in tqdm(range(150), desc="Generating Response...", bar_format="{l_bar}{bar} [elapsed: {elapsed}]", ncols=70, leave=False):
             time.sleep(0.01)
-    print(utterances[name].format(**kwargs))
+    # Check if casual mode is enabled in config
+    if conf.get("casual_mode", False):
+        casual_name = "casual_" + name
+        if casual_name in utterances:
+            response = utterances[casual_name].format(**kwargs)
+        else:
+            response = utterances[name].format(**kwargs)
+    else:
+        response = utterances[name].format(**kwargs)
+
+    print(response)
+
     if conf["tts"]:
-        tts_engine.say(str(utterances[name].format(**kwargs)))
-        tts_engine.runAndWait()
+        tts_engine.say(str(response))
+        tts_engine.runAndWait() 
 
 # Helper function to update the storage
 def update_storage(table: str, dict: Dict):
@@ -410,11 +421,12 @@ if conf["asr"]:
     import  torch
     from faster_whisper import WhisperModel # pip install git+https://github.com/m-bain/whisperx.git
 
-    if DEBUG:
-        print("CUDA GPU accalarion status: ",torch.cuda.is_available())
+    
+    print("CUDA GPU accalarion status: ",torch.cuda.is_available())
     print("if no cuda device detected please turn off asr in config.json !!!!!!")
 
-    Whisper_model = WhisperModel("large-v3", device="cuda", compute_type="float16")
+    fast_device = "cuda" if torch.cuda.is_available() else "cpu"
+    Whisper_model = WhisperModel("large-v3", device= fast_device , compute_type="float16")
     # Whisper_model = WhisperModel("medium", device="cpu", compute_type="int8")
 
 def main():

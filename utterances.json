@@ -20,6 +20,26 @@
   "other_request": "Do you have any other requests?",
   "liked": "Great! I'm glad you like it.",
   "null": "I'm sorry, I didn't understand, could you repeat that?", 
-  "goodbye": "Thank you for using the group 25 restaurant recommendation system. Goodbye!"
+  "goodbye": "Thank you for using the group 25 restaurant recommendation system. Goodbye!",
 
+
+  "casual_greeting": "Yo dude! Welcome to Project 25 restaurant finder. What is good? How can I help ya?",
+  "casual_welcome": "Hey! What kinda spot are you in the mood for?",
+  "casual_provide_preferences": "Let me know what kinda vibe you are feelin for food now.",
+
+  "casual_ask_preferences": "Hmm, did you mean {value} for {key}? Not totally sure, my dude.",
+  "casual_ask_more_preferences": "Got anything else you are lookin for?",
+  "casual_ask_additional_requirements": "Anything else you need? Just let me know.",
+  "casual_clear_preferences": "Whoa, did NOT  catch that. Could ya say it again?",
+  "casual_still_unknown": "Still not gettin it. Mind tryin again?",
+  "casual_no_matches": "Ahhhh, bummer! Looks like nothing matches right now.",
+  "casual_no_more_matches": "Dang, that is all I got for ya. No more matches.",
+  "casual_suggest_restaurant": "How about this spot: {restaurant}? Pretty chill.",
+  "casual_suggest_restaurant_with_explanation": "How about {restaurant}? It is legit cause {explanation}.",
+  "casual_suggest_alternatives": "You feelin this place? If not, I can hook ya up with another.",
+  "casual_remove_option": "Alright, scratch that one. Lemme find somethin' else.",
+  "casual_other_request": "Got any other requests?",
+  "casual_liked": "Sweet! Glad it works for ya.",
+  "casual_null": "Ooopsa, missed that. Can ya say it again for me?",
+  "casual_goodbye": "Thanks for hanging with Project 25. Later! se ya next time! gooooooodbye!"
 }
