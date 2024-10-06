@@ -1,6 +1,6 @@
 {
     "delay_responses": true,
     "casual_mode": true,
-    "asr": false, 
-    "tts": false
+    "asr": true, 
+    "tts": true
 }

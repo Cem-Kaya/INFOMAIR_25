@@ -234,7 +234,61 @@ pickle.dump(knn_model, open("classifiers/knn_duped.pkl", "wb"))
 # %%
 
 
+
+
+
+
+
 # %%
 
+# %% Use a simple bag of words model to vectorize the input data
+count_vectorizer = CountVectorizer()
+
+# Fit the vectorizer on the training data
+x_train_count = count_vectorizer.fit_transform(x_train_deduped)
+
+# Save the fitted vectorizer for reuse
+pickle.dump(count_vectorizer, open("classifiers/count_vectorizer.pkl", "wb"))
+
+# Transform the test data using the fitted vectorizer
+x_test_count_deduped = count_vectorizer.transform(x_test_deduped)
+
+# Create a visual representation of the training data using PCA
+pca = PCA(n_components=3)
+x_train_pca = pca.fit_transform(x_train_count.toarray())
+
+fig = px.scatter_3d(x=x_train_pca[:, 0], y=x_train_pca[:, 1], z=x_train_pca[:, 2], color=y_train_deduped)
+fig.show()
+
+# %% Train a logistic regression model on the data
+logistic_regression_model = LogisticRegression()
+
+# Fit the logistic regression model
+logistic_regression_model.fit(x_train_count, y_train_deduped)
+
+# Make predictions on the test set
+y_pred_deduped = logistic_regression_model.predict(x_test_count_deduped)
+
+# Print classification report
+print("Logistic Regression, deduped data")
+print(classification_report(y_test_deduped, y_pred_deduped))
+
+# Save the model
+pickle.dump(logistic_regression_model, open("classifiers/logistic_regression_deduped.pkl", "wb"))
+
+# %% Identify and print the misclassified instances for the deduped Logistic Regression model
+# Find the indexes of the misclassified instances
+misclassified_indices = [i for i in range(len(y_test_deduped)) if y_test_deduped.iloc[i] != y_pred_deduped[i]]
+
+# Create a DataFrame containing the misclassified instances
+misclassified_cases = pd.DataFrame({
+    'sentence': x_test_deduped.iloc[misclassified_indices].values,
+    'true_label': y_test_deduped.iloc[misclassified_indices].values,
+    'predicted_label': y_pred_deduped[misclassified_indices]
+})
+
+# Print the misclassified cases to the console
+print("Misclassified Cases by Logistic Regression (deduped data):")
+print(misclassified_cases.to_string(index=False))
 
 

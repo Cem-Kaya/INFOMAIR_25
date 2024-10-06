@@ -13,7 +13,7 @@ import threading
 
 
 # Debug flag to enable/disable debug output
-DEBUG = True
+DEBUG = False
 
 
 
