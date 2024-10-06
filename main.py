@@ -91,8 +91,10 @@ keywords = {
     "area": ["location", "area", "part"],
 }
 
+# The possible consequents for the additional requirements
 consequents = ["touristic", "assigned seats", "children", "romantic"]
 
+# The inference rules used to determine the additional requirements
 inference_rules = {
     "touristic": lambda x: x["food_quality"] > 7 and x["pricerange"] == "cheap" and not x["food"] == "romanian",
     "assigned seats": lambda x: x["crowdedness"],
@@ -100,12 +102,14 @@ inference_rules = {
     "romantic": lambda x: not x["crowdedness"] and x["length_of_stay"]
 }
 
+# The explanations for the additional requirements
 explainers = {
     "touristic": "it is touristic because the food quality is high, the price is cheap, and it is not Romanian",
     "assigned seats": "it has assigned seats because it is crowded",
     "children": "it is suitable for children because people usually do not stay long",
     "romantic": "it is romantic because it is not crowded and people stay long"
 }
+
 if conf["tts"]:
     import pyttsx3
 
@@ -357,33 +361,43 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
             return ask_preferences(user_input, model_prediction)
         
         case DialogState.ASK_ADDITIONAL_REQUIREMENTS:
+            # Find the restaurants that match the user preferences
             restaurants = find_restaurants(storage["preferences"])
+
+            # parse the user input to find additional requirements
             requirements = [consequent for consequent in consequents if consequent in user_input]
 
+            # if there are no restaurants that match the preferences, 
+            # tell the user and ask for more preferences
             if not restaurants:
                 reply("no_matches")
                 return DialogState.ASK_PREFERENCES
-
+            
+            # if there are no additional requirements, suggest the best restaurant
             if not requirements:
                 storage["current_suggestion"] = restaurants[0]
                 reply("suggest_restaurant", restaurant=restaurants[0]["restaurantname"])
                 reply("other_request")
                 return DialogState.OTHER_REQUEST
-            
+
+            # filter the restaurants based on the additional requirements 
             restaurant_names = [restaurant["restaurantname"] for restaurant in restaurants]
             for requirement in requirements:
                 for restaurant in restaurants:
                     if not inference_rules[requirement](restaurant):
                         restaurant_names.remove(restaurant["restaurantname"])
-    
+
+            # if there are no restaurants that match the requirements,
+            # tell the user and ask for more preferences
             if not restaurant_names:
                 reply("no_matches")
                 return DialogState.ASK_PREFERENCES
-            
+
+            # suggest the best restaurant that matches the requirements 
             restaurant = next(restaurant for restaurant in restaurants if restaurant["restaurantname"] == restaurant_names[0])
-    
             storage["current_suggestion"] = restaurant
 
+            # explain why we suggested this restaurant
             explanation = " and ".join([explainers[requirement] for requirement in requirements])
             reply("suggest_restaurant_with_explanation", restaurant=restaurant["restaurantname"], explanation=explanation)
             reply("other_request")
@@ -442,7 +456,10 @@ if conf["asr"]:
     print("CUDA GPU accalarion status: ",torch.cuda.is_available())
     print("if no cuda device detected please turn off asr in config.json !!!!!!")
 
+    # Use cuda if available
     fast_device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    # Initialize the ASR model
     Whisper_model = WhisperModel("large-v3", device= fast_device , compute_type="float16")
     # Whisper_model = WhisperModel("medium", device="cpu", compute_type="int8")
 
