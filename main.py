@@ -371,7 +371,7 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
             # tell the user and ask for more preferences
             if not restaurants:
                 reply("no_matches")
-                return DialogState.ASK_PREFERENCES
+                return DialogState.NO_RESTAURANT_FOUND
             
             # if there are no additional requirements, suggest the best restaurant
             if not requirements:
@@ -391,7 +391,7 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
             # tell the user and ask for more preferences
             if not restaurant_names:
                 reply("no_matches")
-                return DialogState.ASK_PREFERENCES
+                return DialogState.NO_RESTAURANT_FOUND
 
             # suggest the best restaurant that matches the requirements 
             restaurant = next(restaurant for restaurant in restaurants if restaurant["restaurantname"] == restaurant_names[0])
@@ -440,6 +440,15 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
                 reply("null")
                 return DialogState.OTHER_REQUEST
 
+        case DialogState.NO_RESTAURANT_FOUND:
+            storage["preferences"] = {}
+            storage["suggestions"] = {}
+            storage["current_suggestion"] = {}
+            storage["exclude"] = []
+            
+            reply("remove_preferences")
+            return DialogState.ASK_PREFERENCES
+    
         # the conversation is finished
         case DialogState.GOODBYE:
             if model_prediction == DialogAct.BYE:
