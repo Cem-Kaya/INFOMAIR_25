@@ -10,6 +10,9 @@
   "ask_more_preferences": "Do you have any other preferences?",
   "ask_additional_requirements": "Do you have additional requirements?",
   "clear_preferences": "I'm sorry, I didn't understand. Could you please provide a more clear answer?",
+
+  "remove_preferences": "I will remove all preferences",
+  
   "invalid_preferences": "Okay, that doesn't seem to be a valid preference. Could you please try again?",
   "not_enough_preferences": "I'm sorry, but i need more information to provide you with a recommendation, could you please provide more preferences?",
   "still_unknown": "I still couldn't understand. Could you please try again?",
