@@ -179,13 +179,18 @@ def extract_preferences(user_input):
 # Get more information about the restaurant
 def get_more_info(restaurant, user_input):
     if "address" in user_input:
-        print(f"Address: {restaurant['address']}")
+        reply("give_more_information", key="address", value=restaurant["addr"])
     if "phone" in user_input:
-        print(f"Phone: {restaurant['phone']}")
+        reply("give_more_information", key="phone number", value=restaurant["phone"])
     if "post" in user_input:
-        print(f"Postal code: {restaurant['postcode']}")
-    if "adress" in user_input:
-        print(f"Address: {restaurant['addr']}")
+        reply("give_more_information", key="postcode", value=restaurant["postcode"])
+    if "food" in user_input:
+        reply("give_more_information", key="food", value=restaurant["food"])
+    if "price" in user_input:
+        reply("give_more_information", key="pricerange", value=restaurant["pricerange"])
+    if "area" in user_input:
+        reply("give_more_information", key="area", value=restaurant["area"])
+
 
 
 
@@ -252,7 +257,7 @@ def find_restaurants(preferences):
     return [x["restaurant"] for x in sorted_restaurants]
 
 # Helper function used to ask for user preferences
-def ask_preferences(user_input: str):
+def ask_preferences(user_input: str, model_prediction: DialogAct = DialogAct.NULL):
     global storage
 
     # extract the preferences from the user input
@@ -278,10 +283,18 @@ def ask_preferences(user_input: str):
     if len(storage["preferences"]) >= 2:
         reply("ask_additional_requirements")
         return DialogState.ASK_ADDITIONAL_REQUIREMENTS
+    elif model_prediction == DialogAct.NEGATE or model_prediction == DialogAct.DENY:
+        # the user did not agree with the suggestions, ask for more clear answers
+        reply("invalid_preferences")
+    elif not any(preferences.values()) and not any(suggestions.values()):
+        # the user did not provide any preferences, ask again
+        reply("null")
+        return DialogState.ASK_PREFERENCES
     else:
         # ask the user for more preferences
         reply("ask_more_preferences")
-        return DialogState.ASK_PREFERENCES
+
+    return DialogState.ASK_PREFERENCES
 
 # The main dialog manager
 # This function is called for each turn of the conversation
@@ -319,10 +332,14 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
         case DialogState.ASK_PREFERENCES:
             if model_prediction == DialogAct.INFORM:
                 return ask_preferences(user_input)
+            elif len(storage["preferences"]) < 2:
+                # the user did not provide enough preferences, ask again
+                reply("not_enough_preferences")
             else:
                 # the user did not provide any preferences, ask again
                 reply("clear_preferences")
-                return DialogState.ASK_PREFERENCES
+            
+            return DialogState.ASK_PREFERENCES
 
         case DialogState.ASK_CLEAR_PREFERENCES:
             if model_prediction == DialogAct.ACK or model_prediction == DialogAct.AFFIRM:
@@ -335,9 +352,9 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
                 if len(storage["preferences"]) >= 2:
                     reply("ask_additional_requirements")
                     return DialogState.ASK_ADDITIONAL_REQUIREMENTS
-
+            
             # if the user does not agree with the suggestions, or gives new preferences, parse them
-            return ask_preferences(user_input)
+            return ask_preferences(user_input, model_prediction)
         
         case DialogState.ASK_ADDITIONAL_REQUIREMENTS:
             restaurants = find_restaurants(storage["preferences"])
@@ -418,7 +435,7 @@ def dialog_manager(current_state: DialogState, user_input: str, model_prediction
                 return DialogState.GOODBYE
 
 if conf["asr"]:
-    import  torch
+    import torch
     from faster_whisper import WhisperModel # pip install git+https://github.com/m-bain/whisperx.git
 
     
